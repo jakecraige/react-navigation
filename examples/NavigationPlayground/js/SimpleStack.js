@@ -20,6 +20,10 @@ const MyNavScreen = ({ navigation, banner }) => (
       title="Go to a profile screen"
     />
     <Button
+      onPress={() => navigation.navigate('Modal')}
+      title="Go to a modal screen"
+    />
+    <Button
       onPress={() => navigation.goBack(null)}
       title="Go back"
     />
@@ -69,6 +73,16 @@ MyProfileScreen.navigationOptions = {
     ),
   }),
 };
+const MyModalScreen = ({ navigation }) => (
+  <MyNavScreen
+    banner="Modal Screen"
+    navigation={navigation}
+  />
+);
+MyModalScreen.navigationOptions = {
+  title: 'Modal',
+  mode: 'modal'
+};
 
 const SimpleStack = StackNavigator({
   Home: {
@@ -82,6 +96,9 @@ const SimpleStack = StackNavigator({
     path: 'photos/:name',
     screen: MyPhotosScreen,
   },
-});
+  Modal: {
+    screen: MyModalScreen
+  }
+}, { headerMode: 'screen' });
 
 export default SimpleStack;

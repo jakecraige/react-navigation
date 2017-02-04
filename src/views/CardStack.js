@@ -173,13 +173,14 @@ class CardStack extends React.Component<DefaultProps, Props, void> {
     // props for the old screen
     prevTransitionProps: NavigationTransitionProps
   ) => {
-    const isModal = this.props.mode === 'modal';
+    const isModal = this._isModal(transitionProps);
     // Copy the object so we can assign useNativeDriver below
     // (avoid Flow error, transitionSpec is of type NavigationTransitionSpec).
     const transitionSpec = {
       ...this._getTransitionConfig(
         transitionProps,
-        prevTransitionProps
+        prevTransitionProps,
+        isModal
       ).transitionSpec,
     };
     if (
@@ -234,7 +235,7 @@ class CardStack extends React.Component<DefaultProps, Props, void> {
 
   _render(props: NavigationTransitionProps): React.Element<*> {
     let floatingHeader = null;
-    const headerMode = this._getHeaderMode();
+    const headerMode = this._getHeaderMode(props);
     if (headerMode === 'float') {
       floatingHeader = this._renderHeader(props, headerMode);
     }
@@ -256,11 +257,11 @@ class CardStack extends React.Component<DefaultProps, Props, void> {
     );
   }
 
-  _getHeaderMode(): HeaderMode {
+  _getHeaderMode(props: NavigationTransitionProps): HeaderMode {
     if (this.props.headerMode) {
       return this.props.headerMode;
     }
-    if (Platform.OS === 'android' || this.props.mode === 'modal') {
+    if (Platform.OS === 'android' || this._isModal(props)) {
       return 'screen';
     }
     return 'float';
@@ -270,12 +271,14 @@ class CardStack extends React.Component<DefaultProps, Props, void> {
     // props for the new screen
     transitionProps: NavigationTransitionProps,
     // props for the old screen
-    prevTransitionProps: NavigationTransitionProps
+    prevTransitionProps: NavigationTransitionProps,
+    // whether or not we want a modal transition
+    isModal: boolean
   ): TransitionConfig {
     const defaultConfig = TransitionConfigs.defaultTransitionConfig(
       transitionProps,
       prevTransitionProps,
-      this.props.mode === 'modal'
+      isModal
     );
     if (this.props.transitionConfig) {
       return {
@@ -292,7 +295,7 @@ class CardStack extends React.Component<DefaultProps, Props, void> {
     props: NavigationSceneRendererProps,
   ): React.Element<*> {
     const header = this.props.router.getScreenConfig(props.navigation, 'header');
-    const headerMode = this._getHeaderMode();
+    const headerMode = this._getHeaderMode(props);
     if (headerMode === 'screen') {
       const isHeaderHidden = header && header.visible === false;
       const maybeHeader =
@@ -329,9 +332,9 @@ class CardStack extends React.Component<DefaultProps, Props, void> {
   }
 
   _renderScene(props: NavigationSceneRendererProps): React.Element<*> {
-    const isModal = this.props.mode === 'modal';
+    const isModal = this._isModal(props);
 
-    const { screenInterpolator } = this._getTransitionConfig();
+    const { screenInterpolator } = this._getTransitionConfig(null, null, isModal);
     const style = screenInterpolator && screenInterpolator(props);
 
     let panHandlers = null;
@@ -362,6 +365,11 @@ class CardStack extends React.Component<DefaultProps, Props, void> {
         style={[style, this.props.cardStyle]}
       />
     );
+  }
+
+  _isModal(props: NavigationTransitionProps): bool {
+    const sceneMode = this.props.router.getScreenConfig(props.navigation, 'mode');
+    return sceneMode === 'modal' || this.props.mode === 'modal';
   }
 }
 
